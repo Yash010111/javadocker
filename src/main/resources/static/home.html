@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>StockPulse Home</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071e38;
+      --surface: rgba(235, 248, 255, 0.10);
+      --surface-border: rgba(112, 177, 247, 0.22);
+      --text: #eef7ff;
+      --muted: #b5d8f5;
+      --primary: #80c9ff;
+      --accent: #a7d9ff;
+      --shadow: rgba(0, 0, 0, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(124, 188, 255, 0.16), transparent 25%),
+                  radial-gradient(circle at bottom right, rgba(88, 150, 255, 0.12), transparent 25%),
+                  linear-gradient(135deg, #041d38 0%, #082244 45%, #071f38 100%);
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      letter-spacing: -0.04em;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 2.8vw, 3rem);
+      text-shadow: 0 3px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 26px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 22px 48px var(--shadow);
+      padding: 32px;
+      margin-top: 20px;
+    }
+
+    .card:first-of-type {
+      margin-top: 0;
+    }
+
+    .glass-panel {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 14px;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      margin: 10px 0;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    select {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    option {
+      background: rgba(7, 27, 52, 0.96);
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(102, 217, 255, 0.9);
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 4px rgba(102, 217, 255, 0.12);
+    }
+
+    button {
+      width: auto;
+      min-width: 160px;
+      padding: 14px 22px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #08101f;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .flex-row > * {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tab-button {
+      padding: 12px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .tab-button.active {
+      background: rgba(125, 201, 255, 0.20);
+      border-color: rgba(125, 201, 255, 0.5);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .info-row div {
+      flex: 1;
+      min-width: 220px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+    }
+
+    .portfolio-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .portfolio-table th,
+    .portfolio-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+      color: var(--text);
+    }
+
+    .portfolio-table th {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .portfolio-empty {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .message,
+    #userInfo {
+      color: var(--muted);
+    }
+
+    #stockChart {
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #status {
+      margin-top: 16px;
+      color: var(--muted);
+    }
+
+    .status-error {
+      color: #ff8a80;
+    }
+
+    @media (max-width: 720px) {
+      .card {
+        padding: 24px 20px;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>StockPulse</h1>
+        <div id="userInfo"></div>
+      </div>
+      <button onclick="logout()" class="secondary">Logout</button>
+    </header>
+
+    <div class="card">
+      <h2>Search Stock</h2>
+      <div class="flex-row">
+        <input id="keyword" placeholder="Keyword (e.g. rel)" />
+        <button onclick="searchStock()">Search</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+    <div class="card">
+      <h2>Fetch Stock Data</h2>
+      <div class="flex-row">
+        <input id="symbol" placeholder="Stock Symbol (e.g. RELIANCE)" />
+        <select id="interval">
+          <option value="1min">1min</option>
+          <option value="hourly">hourly</option>
+          <option value="daily">daily</option>
+          <option value="weekly">weekly</option>
+          <option value="monthly">monthly</option>
+        </select>
+      </div>
+      <button onclick="getStock()">Get Data</button>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-button active" id="tradeTab" onclick="showSection('trade')">Trade</button>
+        <button class="tab-button" id="portfolioTab" onclick="showSection('portfolio')">Portfolio</button>
+      </div>
+      <div id="tradeSection" class="panel active">
+        <h2>Buy / Sell</h2>
+        <div class="info-row">
+          <div>Symbol: <strong id="selectedSymbol">none</strong></div>
+          <div>Price: <strong id="selectedPrice">0.00</strong></div>
+        </div>
+        <input id="tradeQuantity" type="number" min="1" step="1" placeholder="Quantity to buy or sell" />
+        <div class="flex-row">
+          <button onclick="handleTrade('buy')">Buy</button>
+          <button class="secondary" onclick="handleTrade('sell')">Sell</button>
+        </div>
+        <div id="tradeStatus" class="message"></div>
+      </div>
+      <div id="portfolioSection" class="panel">
+        <h2>Portfolio</h2>
+        <div id="portfolioList" class="portfolio-empty">Loading portfolio...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Visual Stock Output</h2>
+      <div id="stockInfo" class="message">Use the search or fetch controls above to begin.</div>
+      <canvas id="stockChart" width="920" height="360" style="width:100%; max-width:100%; background:#0d0d0d; border-radius:10px; border:1px solid rgba(255,255,255,0.08); display:block; margin-top:20px;"></canvas>
+      <div id="status" class="message"></div>
+    </div>
+  </div>
+
+  <script>
+    function getToken() {
+      const token = localStorage.getItem('token');
+      return token ? token.trim() : '';
+    }
+
+    function getUsername() {
+      return localStorage.getItem('username') || '';
+    }
+
+    function getRoles() {
+      try {
+        const stored = localStorage.getItem('roles');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function isAdmin() {
+      const roles = getRoles().map(role => String(role).toUpperCase());
+      return roles.some(role => role.includes('ADMIN'));
+    }
+
+    function requireLogin() {
+      if (!getToken()) {
+        window.location.href = '/';
+        return;
+      }
+      if (isAdmin()) {
+        window.location.href = '/admin.html';
+        return;
+      }
+      document.getElementById('userInfo').innerText = `Logged in as ${getUsername()} (User)`;
+      loadPortfolio();
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('roles');
+      window.location.href = '/';
+    }
+
+    function searchStock() {
+      const keyword = document.getElementById('keyword').value;
+      const token = getToken();
+      if (!token) {
+        logout();
+        return;
+      }
+      fetch(`/api/stocks/search?keyword=${encodeURIComponent(keyword)}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '';
+        if (Array.isArray(data)) {
+          data.forEach(item => {
+            const button = document.createElement('button');
+            button.textContent = `${item.symbol} - ${item.name}`;
+            button.onclick = () => document.getElementById('symbol').value = item.symbol;
+            container.appendChild(button);
+          });
+          if (!data.length) {
+            container.innerText = 'No matches found';
+          }
+        } else {
+          showStatus('Unable to render search results.');
+        }
+      })
+      .catch(err => showStatus(`Search failed: ${err}`));
+    }
+
+    function getStock() {
+      const symbol = document.getElementById('symbol').value.trim();
+      const interval = document.getElementById('interval').value;
+      const token = getToken();
+      if (!token) {
+        logout();
+        return;
+      }
+      if (!symbol) {
+        showStatus('Please enter a stock symbol.');
+        return;
+      }
+      showStatus('Fetching stock data...', false);
+      fetch(`/api/stocks?symbol=${encodeURIComponent(symbol)}&interval=${interval}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.message || JSON.stringify(data));
+        }
+        renderStockData(data);
+      })
+      .catch(err => {
+        clearChart();
+        showStatus(`Fetch failed: ${err.message || err}`);
+      });
+    }
+
+    let lastStockSymbol = '';
+    let lastStockPrice = null;
+
+    function showStatus(message, success = true) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.style.color = success ? '#a5d6a7' : '#ff8a80';
+    }
+
+    function showTradeStatus(message, success = true) {
+      const status = document.getElementById('tradeStatus');
+      status.textContent = message;
+      status.style.color = success ? '#a5d6a7' : '#ff8a80';
+    }
+
+    function showSection(section) {
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(section + 'Section').classList.add('active');
+      document.getElementById(section + 'Tab').classList.add('active');
+      if (section === 'portfolio') {
+        loadPortfolio();
+      }
+    }
+
+    function loadPortfolio() {
+      const list = document.getElementById('portfolioList');
+      list.textContent = 'Loading portfolio...';
+      fetch('/api/portfolio', {
+        headers: { 'Authorization': 'Bearer ' + getToken() }
+      })
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || 'Unable to load portfolio');
+        }
+        return res.json();
+      })
+      .then(data => renderPortfolio(data))
+      .catch(err => {
+        list.innerHTML = `<div class="portfolio-empty">${err.message}</div>`;
+      });
+    }
+
+    function renderPortfolio(holdings) {
+      const container = document.getElementById('portfolioList');
+      if (!Array.isArray(holdings) || holdings.length === 0) {
+        container.innerHTML = '<div class="portfolio-empty">No holdings yet. Buy stocks to begin building your portfolio.</div>';
+        return;
+      }
+
+      const rows = holdings.map(item => `
+        <tr>
+          <td>${item.symbol}</td>
+          <td>${item.quantity}</td>
+          <td>${parseFloat(item.averagePrice).toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <table class="portfolio-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Shares</th>
+              <th>Avg Cost</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function handleTrade(type) {
+      const quantity = Number(document.getElementById('tradeQuantity').value);
+      if (!lastStockSymbol) {
+        showTradeStatus('Select a stock symbol and fetch data first.', false);
+        return;
+      }
+      if (!quantity || quantity <= 0) {
+        showTradeStatus('Enter a valid quantity to trade.', false);
+        return;
+      }
+      if (!lastStockPrice) {
+        showTradeStatus('Unable to determine last price for trade.', false);
+        return;
+      }
+      const endpoint = `/api/portfolio/${type}`;
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + getToken()
+        },
+        body: JSON.stringify({ symbol: lastStockSymbol, quantity, price: lastStockPrice })
+      })
+      .then(async res => {
+        const payload = await res.json();
+        if (!res.ok) {
+          throw new Error(payload?.message || JSON.stringify(payload));
+        }
+        return payload;
+      })
+      .then(result => {
+        const verb = type === 'buy' ? 'purchased' : 'sold';
+        showTradeStatus(`Successfully ${verb} ${quantity} shares of ${result.symbol}.`, true);
+        loadPortfolio();
+      })
+      .catch(err => showTradeStatus(err.message || err.toString(), false));
+    }
+
+    function clearChart() {
+      const canvas = document.getElementById('stockChart');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('stockInfo').textContent = 'Use the search or fetch controls above to begin.';
+    }
+
+    function renderStockData(stock) {
+      const chart = document.getElementById('stockChart');
+      const ctx = chart.getContext('2d');
+      const info = document.getElementById('stockInfo');
+
+      if (!stock || !Array.isArray(stock.timestamps) || !Array.isArray(stock.close) || !stock.close.length) {
+        clearChart();
+        showStatus('No chartable stock data returned.');
+        return;
+      }
+
+      const timestamps = stock.timestamps;
+      const closeValues = stock.close.map(value => Number(value)).filter(v => !Number.isNaN(v));
+      if (!closeValues.length || timestamps.length !== closeValues.length) {
+        clearChart();
+        showStatus('Stock response is missing matching timestamp and close arrays.');
+        return;
+      }
+
+      const minValue = Math.min(...closeValues);
+      const maxValue = Math.max(...closeValues);
+      const padding = 50;
+      const width = chart.width;
+      const height = chart.height;
+      const plotWidth = width - padding * 2;
+      const plotHeight = height - padding * 2;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#090909';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = '#555';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i <= 4; i++) {
+        const y = padding + (plotHeight / 4) * i;
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+      }
+      ctx.stroke();
+
+      const stepCount = Math.max(closeValues.length - 1, 1);
+      const points = closeValues.map((value, index) => {
+        const x = padding + (plotWidth * index) / stepCount;
+        const y = padding + ((maxValue - value) / (maxValue - minValue || 1)) * plotHeight;
+        return { x, y, value, label: timestamps[index] };
+      });
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#4caf50';
+      ctx.lineWidth = 2;
+      points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+
+      const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+      gradient.addColorStop(0, 'rgba(76,175,80,0.25)');
+      gradient.addColorStop(1, 'rgba(76,175,80,0)');
+      ctx.lineTo(points[points.length - 1].x, height - padding);
+      ctx.lineTo(points[0].x, height - padding);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(`${stock.symbol || 'Unknown'} · ${stock.interval || 'unknown interval'}`, padding, 28);
+      ctx.font = '12px Arial';
+      ctx.fillText(`Points: ${closeValues.length}`, padding, 46);
+      ctx.fillText(`Current: ${closeValues[closeValues.length - 1].toFixed(2)}`, padding + 140, 46);
+      ctx.fillText(`High: ${maxValue.toFixed(2)}`, padding + 260, 46);
+      ctx.fillText(`Low: ${minValue.toFixed(2)}`, padding + 360, 46);
+
+      ctx.fillStyle = '#999';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${timestamps[0]}`, padding, height - padding + 18);
+      ctx.fillText(`${timestamps[timestamps.length - 1]}`, width - padding - 120, height - padding + 18);
+      ctx.textAlign = 'center';
+      ctx.fillText('Time', width / 2, height - padding + 36);
+      ctx.textAlign = 'start';
+      ctx.fillText(maxValue.toFixed(2), 10, padding + 4);
+      ctx.fillText(minValue.toFixed(2), 10, height - padding + 4);
+
+      const latestPrice = closeValues[closeValues.length - 1];
+      lastStockSymbol = stock.symbol || '';
+      lastStockPrice = latestPrice;
+      document.getElementById('selectedSymbol').textContent = lastStockSymbol || 'Unknown';
+      document.getElementById('selectedPrice').textContent = latestPrice.toFixed(2);
+
+      info.innerHTML = `<strong>${stock.symbol || 'Unknown Symbol'}</strong> — interval: ${stock.interval || 'N/A'}<br>` +
+        `Data points: ${closeValues.length} · first: ${closeValues[0].toFixed(2)} · last: ${latestPrice.toFixed(2)}`;
+      showStatus('Chart rendered successfully.', true);
+    }
+
+    if (!getToken()) {
+      window.location.href = '/';
+    } else {
+      requireLogin();
+    }
+  </script>
+</body>
+</html>

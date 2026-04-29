@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>StockPulse Admin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071f3b;
+      --surface: rgba(235, 248, 255, 0.10);
+      --surface-border: rgba(112, 177, 247, 0.22);
+      --text: #eef7ff;
+      --muted: #b6d6f6;
+      --primary: #84cfff;
+      --accent: #aedcff;
+      --shadow: rgba(0, 0, 0, 0.30);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(124, 188, 255, 0.15), transparent 22%),
+                  radial-gradient(circle at bottom right, rgba(88, 153, 255, 0.11), transparent 24%),
+                  linear-gradient(135deg, #041d36 0%, #071f3e 45%, #071f3b 100%);
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      letter-spacing: -0.04em;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 2.6vw, 2.8rem);
+      text-shadow: 0 3px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 26px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 22px 48px var(--shadow);
+      padding: 32px;
+      margin-top: 20px;
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      margin: 10px 0;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(110, 216, 255, 0.95);
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 4px rgba(110, 216, 255, 0.12);
+    }
+
+    button {
+      min-width: 150px;
+      padding: 14px 22px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #08101f;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .user-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .user-row div {
+      word-break: break-word;
+      color: var(--muted);
+    }
+
+    .message,
+    #status,
+    #userInfo {
+      color: var(--muted);
+    }
+
+    pre#output {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(15, 24, 38, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #d1e4ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 760px) {
+      .user-row {
+        grid-template-columns: 1fr;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Admin Portal</h1>
+        <div id="userInfo"></div>
+      </div>
+      <div>
+        <button onclick="window.location.href='/home.html'" class="secondary">User Home</button>
+        <button onclick="logout()" class="secondary">Logout</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>Alpha Vantage API Key</h2>
+      <input id="apiKey" placeholder="Enter API key" />
+      <button onclick="saveApiKey()">Save API Key</button>
+    </div>
+
+    <div class="card">
+      <h2>User Management</h2>
+      <button class="secondary" onclick="loadUsers()">Refresh Users</button>
+      <div id="userList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Status</h2>
+      <pre id="output">Admin controls are ready.</pre>
+      <div id="status" class="message"></div>
+    </div>
+  </div>
+
+  <script>
+    function getToken() {
+      const token = localStorage.getItem('token');
+      return token ? token.trim() : '';
+    }
+
+    function getUsername() {
+      return localStorage.getItem('username') || '';
+    }
+
+    function getRoles() {
+      try {
+        const stored = localStorage.getItem('roles');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('roles');
+      window.location.href = '/';
+    }
+
+    function requireLogin() {
+      if (!getToken()) {
+        window.location.href = '/';
+        return;
+      }
+      const roles = getRoles().map(role => String(role).toUpperCase());
+      const isAdmin = roles.some(role => role.includes('ADMIN'));
+      if (!isAdmin) {
+        window.location.href = '/home.html';
+        return;
+      }
+      document.getElementById('userInfo').innerText = `Logged in as ${getUsername()} (Admin)`;
+      loadApiKey();
+      loadUsers();
+    }
+
+    function apiRequest(path, options = {}) {
+      const token = getToken();
+      if (!token) {
+        logout();
+        return Promise.reject(new Error('Missing authentication token'));
+      }
+      options.headers = {
+        ...(options.headers || {}),
+        'Authorization': 'Bearer ' + token
+      };
+      return fetch(path, options).then(res => {
+        if (!res.ok) {
+          return res.text().then(text => {
+            throw new Error(text || res.statusText);
+          });
+        }
+        return res.json().catch(() => ({}));
+      });
+    }
+
+    function loadApiKey() {
+      apiRequest('/api/admin/config')
+        .then(data => document.getElementById('apiKey').value = data.apiKey || '')
+        .catch(err => document.getElementById('status').innerText = err.toString());
+    }
+
+    function saveApiKey() {
+      const apiKey = document.getElementById('apiKey').value;
+      apiRequest('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey })
+      })
+        .then(() => document.getElementById('status').innerText = 'API key updated successfully')
+        .catch(err => document.getElementById('status').innerText = err.toString());
+    }
+
+    function loadUsers() {
+      apiRequest('/api/admin/users')
+        .then(users => {
+          const list = document.getElementById('userList');
+          list.innerHTML = '';
+          users.forEach(user => {
+            const row = document.createElement('div');
+            row.className = 'user-row';
+            row.innerHTML = `
+              <div>${user.id} • ${user.username} • ${user.role}</div>
+              <button onclick="editUser(${user.id}, '${user.username}', '${user.role}')">Edit</button>
+              <button onclick="deleteUser(${user.id})" class="secondary">Delete</button>
+            `;
+            list.appendChild(row);
+          });
+        })
+        .catch(err => document.getElementById('status').innerText = err.toString());
+    }
+
+    function editUser(id, username, role) {
+      const newUsername = prompt(`New username for ${username} (leave blank to keep)`);
+      const password = prompt(`New password for ${username} (leave blank to keep current)`);
+      const newRole = prompt(`Role for ${username} (ROLE_USER or ROLE_ADMIN)`, role);
+      if (newRole === null) return;
+      const body = { role: newRole };
+      if (newUsername && newUsername.trim()) body.username = newUsername.trim();
+      if (password && password.trim()) body.password = password.trim();
+      apiRequest(`/api/admin/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+        .then(() => {
+          document.getElementById('status').innerText = `User ${username} updated`;
+          loadUsers();
+        })
+        .catch(err => document.getElementById('status').innerText = err.toString());
+    }
+
+    function deleteUser(id) {
+      if (!confirm('Delete this user?')) return;
+      apiRequest(`/api/admin/users/${id}`, { method: 'DELETE' })
+        .then(() => {
+          document.getElementById('status').innerText = 'User deleted';
+          loadUsers();
+        })
+        .catch(err => document.getElementById('status').innerText = err.toString());
+    }
+
+    requireLogin();
+  </script>
+</body>
+</html>

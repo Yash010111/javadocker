@@ -1,0 +1,7 @@
+H4V46QCP6A0B9VIQs 
+(application.prop
+
+https://github.com/Manoj890880/stock-broker-system
+
+
+admin login it can edit the api of the alpha vantage and also view and edit delte user as a admin role ( no need of search stocks etc in admin portal)

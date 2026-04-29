@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>StockPulse Login</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071b34;
+      --surface: rgba(235, 248, 255, 0.10);
+      --surface-border: rgba(112, 177, 247, 0.22);
+      --text: #eef7ff;
+      --muted: #b2d4f1;
+      --primary: #7dc8ff;
+      --primary-strong: #4aa8ff;
+      --accent: #a8d8ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(124, 188, 255, 0.17), transparent 28%),
+                  radial-gradient(circle at bottom right, rgba(90, 155, 255, 0.14), transparent 28%),
+                  linear-gradient(135deg, #041c33 0%, #091f3a 45%, #071d34 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .card,
+    .glass-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 26px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+      padding: 36px 32px;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0));
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 24px;
+      font-size: clamp(2rem, 2.5vw, 2.5rem);
+      letter-spacing: -0.04em;
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 18px;
+      margin: 12px 0;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: rgba(107, 231, 255, 0.9);
+      box-shadow: 0 0 0 4px rgba(67, 199, 255, 0.14);
+    }
+
+    button {
+      width: 100%;
+      margin: 14px 0 0;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+      color: #08101f;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .notice {
+      margin-top: 22px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    pre#output {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(15, 24, 38, 0.8);
+      color: #d0e7ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>StockPulse Login</h1>
+      <input id="username" placeholder="Username" />
+      <input id="password" type="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <button class="secondary" onclick="register()">Register</button>
+      <div class="notice">
+        Register or sign in with your account to continue.
+      </div>
+      <pre id="output"></pre>
+  </div>
+
+  <script>
+    function saveSession(data) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', data.username);
+      localStorage.setItem('roles', JSON.stringify(data.roles || []));
+    }
+
+    function isAdminResponse(data) {
+      const roles = (data.roles || []).map(role => String(role).toUpperCase());
+      return roles.some(role => role.includes('ADMIN'));
+    }
+
+    function login() {
+      const payload = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      };
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          saveSession(data);
+          window.location.href = isAdminResponse(data) ? '/admin.html' : '/home.html';
+        } else {
+          document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+        }
+      })
+      .catch(err => document.getElementById('output').innerText = err.toString());
+    }
+
+    function register() {
+      const payload = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      };
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          saveSession(data);
+          window.location.href = isAdminResponse(data) ? '/admin.html' : '/home.html';
+        } else {
+          document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+        }
+      })
+      .catch(err => document.getElementById('output').innerText = err.toString());
+    }
+  </script>
+</body>
+</html>
