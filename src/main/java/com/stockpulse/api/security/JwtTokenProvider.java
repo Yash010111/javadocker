@@ -25,7 +25,7 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:}")
     private String secretKey;
 
     @Value("${jwt.expiration-ms}")
@@ -40,6 +40,13 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "Missing JWT secret. Set the JWT_SECRET environment variable or configure jwt.secret in application properties.");
+        }
+        if (secretKey.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT secret is too short. It must be at least 32 bytes long.");
+        }
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
