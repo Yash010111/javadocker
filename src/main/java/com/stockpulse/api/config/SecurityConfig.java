@@ -54,7 +54,8 @@ public class SecurityConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
-                "https://javafrontendverceldev.*",
+                "https://javafrontendverceldev-git-main-yashparaskar2-5012s-projects.vercel.app",
+                "https://.*\\.vercel\\.app",
                 "https://.*\\.railway\\.app"));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(
